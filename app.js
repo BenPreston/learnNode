@@ -1,69 +1,21 @@
-const http = require('http');
+const path = require('path');
 
-const server = http.createServer((req, res) => {
-    console.log('running')
+const express = require('express');
+const bodyParser = require('body-parser');
 
-    if (req.url === '/ben') {
-        res.write(`<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>test</title>
-        </head>
-        <body>
-            <h1>Ben</h1>
-        </body>
-        </html>`)
-        res.end();
-    }
+const app = express();
 
-    if (req.url === '/') {
-        res.write(`<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>test</title>
-        </head>
-        <body>
-            <h1>This is a test</h1>
-            <form action="/create-user" method="POST">
-                <label for="username">Enter Username:</label>
-                <input type="text" name="username">
-            </form>
-        </body>
-        </html>`)
-        res.end();
-    }
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
 
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
 
-    if (req.url === '/create-user') {
-        const body = [];
-        req.on('data', chunk => {
-            body.push(chunk)
-        });
-        req.on('end', () => {
-            const parsedBody = Buffer.concat(body).toString().split('=')[1]
-            console.log(parsedBody)
-            res.write(`<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>test</title>
-            </head>
-            <body>
-                <h1>${parsedBody}</h1>
-                <form action="/create-user" method="POST">
-                    <label for="username">Enter Username:</label>
-                    <input type="text" name="username">
-                </form>
-            </body>
-            </html>`)
-        });
-        res.end()
-    }
+app.use('/admin', adminRoutes);
+app.use(shopRoutes);
+
+app.use((req, res, next) => {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
 });
 
-server.listen(3000)
+app.listen(3000);
